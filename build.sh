@@ -1,0 +1,3 @@
+#/bin/sh
+cargo build --release --target wasm32-unknown-unknown || exit 1
+wasm-bindgen target/wasm32-unknown-unknown/release/minifun_wasm.wasm --no-modules --no-typescript --out-dir wasm

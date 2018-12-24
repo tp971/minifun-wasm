@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<title></title>
+<meta charset="utf-8">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<!--
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" media="screen and (min-device-width: 800px)" href="./style/main.css" />
+    <link rel="stylesheet" media="screen and (max-device-width: 799px)" href="./style/main_mobile.css" />
+-->
+<!--
+    <link rel="stylesheet" href="./style/main.css" />
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+-->
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+<script type="text/javascript" src="./js/jquery.terminal-2.0.2.min.js"></script>
+<link rel="stylesheet" href="./js/jquery.terminal-2.0.2.min.css" />
+
+<style>
+body {
+    background-color: #202020;
+    color: #FFFFFF;
+}
+
+h1 {
+    text-align: center;
+}
+
+.main {
+    width: 800px;
+    margin: auto;
+}
+
+.term {
+    border: 2px solid #404040;
+    margin-bottom: 2em;
+}
+</style>
+
+<script type="text/javascript">
+var term;
+var worker;
+
+$(document).ready(function() {
+    term = $('#term').terminal(function(line) {
+        console.log("\"" + line + "\"");
+        worker.postMessage(line);
+        term.pause();
+    }, {
+        greetings: "",
+        width: 800,
+        height: 600
+    });
+    term.pause();
+
+    worker = new Worker("./js/worker.js");
+    worker.onmessage = function(msg) {
+        if(msg.data.type == "println") {
+            term.echo(msg.data.line);
+        } else if(msg.data.type == "eprintln") {
+            term.error(msg.data.line);
+        } else if(msg.data.type == "prompt") {
+            if(msg.data.cont) {
+                term.set_prompt("  ");
+                term.resume();
+            } else {
+                term.set_prompt("> ");
+                term.resume();
+            }
+        }
+    }
+});
+</script>
+</head>
+
+<body>
+<div class="main">
+    <h1>minifun</h1>
+    <div id="term" class="term"></div>
+</div>
+</body>
+</html>
