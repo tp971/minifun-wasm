@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
-use libminifun::{Scope, Token, TokenInfo};
-use libminifun::parser::{Parser, ParserError};
+use minifun::{Scope, Token, TokenInfo};
+use minifun::parser::{Parser, ParserError};
 use std::io::Read;
 
 #[wasm_bindgen]
