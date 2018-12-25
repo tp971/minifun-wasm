@@ -43,25 +43,90 @@ h1 {
 var term;
 var worker;
 
+var anim_start = null;
+var anim = null;
+var anim_i;
+
+function term_echo(line) {
+    if(anim_start != null) {
+        term_unwait();
+        term.echo(line);
+        term_wait();
+    } else if(anim != null) {
+        term_unwait();
+        term.update(-1, line);
+        term_wait();
+    } else {
+        term.echo(line);
+    }
+}
+
+function term_wait() {
+    term.pause();
+
+    if(anim_start != null)
+        clearTimeout(anim_start);
+    if(anim != null)
+        clearInterval(anim);
+
+    anim_start = setTimeout(function() {
+        anim_start = null;
+        anim_i = 0;
+        term.echo("|");
+        anim = setInterval(animation, 250);
+    }, 2000);
+}
+
+function term_unwait() {
+    if(anim_start != null) {
+        clearTimeout(anim_start);
+        anim_start = null;
+    }
+    if(anim != null) {
+        clearInterval(anim);
+        anim = null;
+        return true;
+    }
+    return false;
+}
+
+function animation() {
+    if(anim_i == 0)
+        term.update(-1, "\\");
+    else if(anim_i == 1)
+        term.update(-1, "-");
+    else if(anim_i == 2)
+        term.update(-1, "/");
+    else if(anim_i == 3)
+        term.update(-1, "|");
+    anim_i = (anim_i + 1) % 4;
+}
+
 $(document).ready(function() {
     term = $('#term').terminal(function(line) {
-        console.log("\"" + line + "\"");
         worker.postMessage(line);
-        term.pause();
+        term_wait();
     }, {
         greetings: "",
         width: 800,
         height: 600
     });
-    term.pause();
 
+    term_echo("loading minifun interpreter");
+    term_wait();
     worker = new Worker("./js/worker.js");
     worker.onmessage = function(msg) {
         if(msg.data.type == "println") {
-            term.echo(msg.data.line);
+            term_echo(msg.data.line);
+            term_wait();
         } else if(msg.data.type == "eprintln") {
+            if(term_unwait())
+                term.update(-1, " ");
+            term_unwait();
             term.error(msg.data.line);
         } else if(msg.data.type == "prompt") {
+            if(term_unwait())
+                term.update(-1, " ");
             if(msg.data.cont) {
                 term.set_prompt("  ");
                 term.resume();
