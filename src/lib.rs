@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use minifun::{Scope, Token, TokenInfo};
+use minifun::{Scope, Token, TokenInfo, intrinsic_fn};
 use minifun::parser::{Parser, ParserError};
 use std::io::Read;
 
@@ -19,8 +19,18 @@ pub struct State {
 
 #[wasm_bindgen]
 pub fn new_state() -> State {
+    let mut scope = Scope::new();
+    minifun::insert_stdlib(&mut scope);
+    scope.insert("println".to_string(), intrinsic_fn! {
+        (Str) -> ():
+            |_, (s, _)| { minifun_println(format!("{}", s)); Ok(()) }
+    });
+    scope.insert("eprintln".to_string(), intrinsic_fn! {
+        (Str) -> ():
+            |_, (s, _)| { minifun_println(format!("{}", s)); Ok(()) }
+    });
     State {
-        scope: Scope::new(),
+        scope,
         row: 1,
         col: 1,
         buf: Vec::new()
